@@ -1426,13 +1426,29 @@ detail::initimpl::pickle_factory<GetState, SetState> pickle(GetState &&g, SetSta
 }
 
 NAMESPACE_BEGIN(detail)
+
+
+inline void add_ro_static_property(handle& cls, const char* name_, cpp_function&& cf){
+    static auto static_property = handle((PyObject *) get_internals().static_property_type);
+    cls.attr(cf.name()) = static_property(cf, none()/* setter */, none() /* deleter */, "");
+}
+
+inline void add_rw_static_property(handle& cls, const char* name_, cpp_function&& cf){
+    static auto static_property = handle((PyObject *) get_internals().static_property_type);
+    static cpp_function no_op([](handle arg){});
+    cpp_function setter_([name_](handle cls_, handle arg){
+        cls_.attr(name_) = handle(); // delete static property
+        cls_.attr(name_) = arg;      // set value
+    });
+    cls.attr(cf.name()) = static_property(cf, setter_, no_op /* deleter */, "");
+}
+
 struct enum_base {
     enum_base(handle base, handle parent) : m_base(base), m_parent(parent) { }
 
     PYBIND11_NOINLINE void init(bool is_arithmetic, bool is_convertible) {
         m_base.attr("__entries") = dict();
         auto property = handle((PyObject *) &PyProperty_Type);
-        auto static_property = handle((PyObject *) get_internals().static_property_type);
 
         m_base.attr("__repr__") = cpp_function(
             [](handle arg) -> str {
@@ -1459,7 +1475,7 @@ struct enum_base {
             }, name("name"), is_method(m_base)
         ));
 
-        m_base.attr("__doc__") = static_property(cpp_function(
+        add_rw_static_property(m_base, "__doc__", cpp_function(
             [](handle arg) -> std::string {
                 std::string docstring;
                 dict entries = arg.attr("__entries");
@@ -1475,15 +1491,15 @@ struct enum_base {
                 }
                 return docstring;
             }, name("__doc__")
-        ), none(), none(), "");
+        ));
 
-        m_base.attr("__members__") = static_property(cpp_function(
+        add_ro_static_property(m_base, "__members__", cpp_function(
             [](handle arg) -> dict {
                 dict entries = arg.attr("__entries"), m;
                 for (const auto &kv : entries)
                     m[kv.first] = kv.second[int_(0)];
                 return m;
-            }, name("__members__")), none(), none(), ""
+            }, name("__members__"))
         );
 
         #define PYBIND11_ENUM_OP_STRICT(op, expr, strict_behavior)                     \
