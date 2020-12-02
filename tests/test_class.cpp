@@ -429,6 +429,11 @@ TEST_SUBMODULE(class_, m) {
     py::class_<Empty>(m, "Empty")
         .def(py::init<>());
 
+    // test_is_castable
+    m.def("is_castable_to_empty",[](py::object& object) -> bool {return py::is_castable<Empty>(object);});
+    m.def("is_castable_to_float",[](py::object& object) -> bool {return py::is_castable<float>(object);});
+    m.def("is_castable_to_float_convertible",[](py::object& object) -> bool {return py::is_castable<float>(object, true);});
+
     // test_base_and_derived_nested_scope
     struct BaseWithNested {
         struct Nested {};

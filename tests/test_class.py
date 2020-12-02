@@ -426,6 +426,33 @@ def test_multiple_instances_with_same_pointer(capture):
     # and just completes without crashing, we're good.
 
 
+def test_is_castable():
+    class Foo:
+        pass
+
+    class EmptyDerived(m.Empty):
+        pass
+
+    assert m.is_castable_to_empty(m.Empty())
+    assert m.is_castable_to_empty(EmptyDerived())
+    assert not m.is_castable_to_empty(Foo())
+    assert not m.is_castable_to_empty(0)
+    assert not m.is_castable_to_empty(1j)
+    assert not m.is_castable_to_empty([])
+
+    assert not m.is_castable_to_float(m.Empty())
+    assert not m.is_castable_to_float(Foo())
+    assert not m.is_castable_to_float([])
+    assert not m.is_castable_to_float(1j)
+    assert m.is_castable_to_float(1.0)
+
+    assert not m.is_castable_to_float_convertible(m.Empty())
+    assert not m.is_castable_to_float_convertible(Foo())
+    assert not m.is_castable_to_float_convertible([])
+    assert not m.is_castable_to_float_convertible(1j)
+    assert m.is_castable_to_float_convertible(1.0)
+
+
 # https://github.com/pybind/pybind11/issues/1624
 def test_base_and_derived_nested_scope():
     assert issubclass(m.DerivedWithNested, m.BaseWithNested)

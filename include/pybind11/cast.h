@@ -2213,6 +2213,11 @@ handle type::handle_of() {
     return detail::get_type_handle(typeid(T), true);
 }
 
+template <typename T>
+inline bool is_castable(handle obj, bool convert=false) {
+    detail::type_caster<T> caster{};
+    return caster.load(obj, convert);
+}
 
 #define PYBIND11_MAKE_OPAQUE(...) \
     namespace pybind11 { namespace detail { \
