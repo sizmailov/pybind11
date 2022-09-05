@@ -117,8 +117,9 @@ jobs:
       matrix:
         # branch, tag or SHA
         cpython-ref:
-          - 'main'
-          - 'a0ad63e70e3682cdf7e87e28091bb54fe12a2d4e'
+          # - 'main'
+          - 'v3.11.0rc1'
+          # - 'a0ad63e70e3682cdf7e87e28091bb54fe12a2d4e'
         
     name: '🐍 trunk (${{ matrix.cpython-ref }}) • ubuntu-latest • x64'
     runs-on: ubuntu-latest
